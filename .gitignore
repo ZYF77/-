@@ -1,0 +1,37 @@
+# Build output
+bin/
+obj/
+Debug/
+Release/
+
+# Local .NET CLI state
+.dotnet-home/
+
+# Frontend build output served by ASP.NET after npm run build
+wwwroot/
+
+# Frontend dependencies and caches
+client/node_modules/
+client/dist/
+client/.vite/
+
+# Logs
+*.log
+logs/
+
+# Local environment files
+.env
+.env.*
+!.env.example
+
+# IDE and editor state
+.vs/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+*.user
+*.suo
+
+# OS metadata
+.DS_Store
+Thumbs.db
