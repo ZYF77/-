@@ -13,6 +13,7 @@ builder.Services.AddSingleton<ComplianceReviewAgent>();
 builder.Services.AddSingleton<CostAnalysisAgent>();
 builder.Services.AddSingleton<RiskReviewAgent>();
 builder.Services.AddSingleton<MaterialAuditOrchestrator>();
+builder.Services.AddSingleton<AuditHistoryStore>();
 
 builder.Services.AddCors(options =>
 {
@@ -39,10 +40,26 @@ app.MapGet("/api/health", () => Results.Ok(new
 
 app.MapGet("/api/sample", (MaterialKnowledgeBase kb) => Results.Ok(kb.CreateSampleRequest()));
 app.MapGet("/api/rules", (MaterialKnowledgeBase kb) => Results.Ok(kb.Rules));
+app.MapGet("/api/audits", async (int? limit, AuditHistoryStore historyStore, CancellationToken cancellationToken) =>
+{
+    var items = await historyStore.ListAsync(limit ?? 50, cancellationToken);
+    return Results.Ok(items);
+});
 
-app.MapPost("/api/audit", async (MaterialAuditRequest request, MaterialAuditOrchestrator orchestrator) =>
+app.MapGet("/api/audits/{reportId}", async (string reportId, AuditHistoryStore historyStore, CancellationToken cancellationToken) =>
+{
+    var report = await historyStore.GetAsync(reportId, cancellationToken);
+    return report is null ? Results.NotFound() : Results.Ok(report);
+});
+
+app.MapPost("/api/audit", async (
+    MaterialAuditRequest request,
+    MaterialAuditOrchestrator orchestrator,
+    AuditHistoryStore historyStore,
+    CancellationToken cancellationToken) =>
 {
     var report = await orchestrator.RunAsync(request);
+    await historyStore.SaveAsync(report, cancellationToken);
     return Results.Ok(report);
 });
 

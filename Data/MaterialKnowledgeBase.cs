@@ -1,10 +1,100 @@
 using BuildingMaterialsAuditAgent.Models;
+using System.Text.Json;
 
 namespace BuildingMaterialsAuditAgent.Data;
 
 public sealed class MaterialKnowledgeBase
 {
-    private readonly List<MaterialRule> _rules =
+    private static readonly JsonSerializerOptions JsonOptions = new()
+    {
+        PropertyNameCaseInsensitive = true,
+        ReadCommentHandling = JsonCommentHandling.Skip,
+        AllowTrailingCommas = true
+    };
+
+    private readonly List<MaterialRule> _rules;
+
+    public MaterialKnowledgeBase(IWebHostEnvironment environment)
+    {
+        _rules = LoadRules(environment.ContentRootPath);
+    }
+
+    public IReadOnlyList<MaterialRule> Rules => _rules;
+
+    public MaterialRule ResolveRule(string categoryOrText)
+    {
+        if (string.IsNullOrWhiteSpace(categoryOrText))
+        {
+            return _rules[0];
+        }
+
+        var normalized = categoryOrText.Trim();
+        var exact = _rules.FirstOrDefault(rule =>
+            rule.Category.Equals(normalized, StringComparison.OrdinalIgnoreCase) ||
+            rule.DisplayName.Equals(normalized, StringComparison.OrdinalIgnoreCase));
+
+        if (exact is not null)
+        {
+            return exact;
+        }
+
+        return _rules
+            .OrderByDescending(rule => rule.Keywords.Count(keyword =>
+                normalized.Contains(keyword, StringComparison.OrdinalIgnoreCase)))
+            .FirstOrDefault(rule => rule.Keywords.Any(keyword =>
+                normalized.Contains(keyword, StringComparison.OrdinalIgnoreCase)))
+            ?? _rules[0];
+    }
+
+    public MaterialAuditRequest CreateSampleRequest() => new()
+    {
+        ProjectName = "星河湾二期商业综合体",
+        MaterialName = "外墙岩棉保温板",
+        Category = "insulation",
+        Specification = "1200*600*80mm，容重 120kg/m3，A级不燃",
+        Supplier = "华北节能建材有限公司",
+        Brand = "北辰",
+        BatchNo = "BC-2026-0421-RW",
+        UnitPrice = 156,
+        Quantity = 4800,
+        Unit = "m2",
+        BudgetUnitPrice = 145,
+        HistoricalUnitPrice = 138,
+        ProvidedDocuments = ["材料报审单", "出厂合格证", "检测报告"],
+        DeclaredStandards = ["GB 8624", "GB/T 25975"],
+        DesignRequirement = "外墙保温材料应采用A级不燃岩棉板，厚度80mm，导热系数不大于0.040 W/(m.K)，燃烧性能应满足GB 8624。",
+        SubmittedText = """
+        材料名称：外墙岩棉保温板
+        规格型号：1200*600*80mm
+        品牌：北辰
+        批次：BC-2026-0421-RW
+        检测结论：所检项目符合标准要求
+        燃烧性能：A级
+        导热系数：0.041 W/(m.K)
+        密度：120 kg/m3
+        压缩强度：42 kPa
+        适用部位：外墙保温系统，含防火隔离带
+        """
+    };
+
+    private static List<MaterialRule> LoadRules(string contentRootPath)
+    {
+        var rulesPath = Path.Combine(contentRootPath, "rules", "material-rules.json");
+
+        if (File.Exists(rulesPath))
+        {
+            var json = File.ReadAllText(rulesPath);
+            var rules = JsonSerializer.Deserialize<List<MaterialRule>>(json, JsonOptions);
+            if (rules is { Count: > 0 })
+            {
+                return rules;
+            }
+        }
+
+        return CreateDefaultRules();
+    }
+
+    private static List<MaterialRule> CreateDefaultRules() =>
     [
         new()
         {
@@ -85,62 +175,4 @@ public sealed class MaterialKnowledgeBase
             HighRiskKeywords = ["给水", "消防", "压力管", "埋地"]
         }
     ];
-
-    public IReadOnlyList<MaterialRule> Rules => _rules;
-
-    public MaterialRule ResolveRule(string categoryOrText)
-    {
-        if (string.IsNullOrWhiteSpace(categoryOrText))
-        {
-            return _rules[0];
-        }
-
-        var normalized = categoryOrText.Trim();
-        var exact = _rules.FirstOrDefault(rule =>
-            rule.Category.Equals(normalized, StringComparison.OrdinalIgnoreCase) ||
-            rule.DisplayName.Equals(normalized, StringComparison.OrdinalIgnoreCase));
-
-        if (exact is not null)
-        {
-            return exact;
-        }
-
-        return _rules
-            .OrderByDescending(rule => rule.Keywords.Count(keyword =>
-                normalized.Contains(keyword, StringComparison.OrdinalIgnoreCase)))
-            .FirstOrDefault(rule => rule.Keywords.Any(keyword =>
-                normalized.Contains(keyword, StringComparison.OrdinalIgnoreCase)))
-            ?? _rules[0];
-    }
-
-    public MaterialAuditRequest CreateSampleRequest() => new()
-    {
-        ProjectName = "星河湾二期商业综合体",
-        MaterialName = "外墙岩棉保温板",
-        Category = "insulation",
-        Specification = "1200*600*80mm，容重 120kg/m3，A级不燃",
-        Supplier = "华北节能建材有限公司",
-        Brand = "北辰",
-        BatchNo = "BC-2026-0421-RW",
-        UnitPrice = 156,
-        Quantity = 4800,
-        Unit = "m2",
-        BudgetUnitPrice = 145,
-        HistoricalUnitPrice = 138,
-        ProvidedDocuments = ["材料报审单", "出厂合格证", "检测报告"],
-        DeclaredStandards = ["GB 8624", "GB/T 25975"],
-        DesignRequirement = "外墙保温材料应采用A级不燃岩棉板，厚度80mm，导热系数不大于0.040 W/(m.K)，燃烧性能应满足GB 8624。",
-        SubmittedText = """
-        材料名称：外墙岩棉保温板
-        规格型号：1200*600*80mm
-        品牌：北辰
-        批次：BC-2026-0421-RW
-        检测结论：所检项目符合标准要求
-        燃烧性能：A级
-        导热系数：0.041 W/(m.K)
-        密度：120 kg/m3
-        压缩强度：42 kPa
-        适用部位：外墙保温系统，含防火隔离带
-        """
-    };
 }

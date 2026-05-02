@@ -1,0 +1,74 @@
+[
+  {
+    "category": "waterproof",
+    "displayName": "防水材料",
+    "keywords": ["防水", "卷材", "涂膜", "聚氨酯", "SBS", "自粘"],
+    "requiredDocuments": ["材料报审单", "出厂合格证", "检测报告", "复试报告"],
+    "recommendedStandards": ["GB 18242", "GB/T 23445", "GB 55030"],
+    "requiredParameterKeywords": ["不透水性", "拉伸强度", "低温柔性", "厚度"],
+    "minReferencePrice": 18,
+    "maxReferencePrice": 95,
+    "priceUnit": "元/平方米",
+    "highRiskKeywords": ["地下室", "屋面", "卫生间", "渗漏", "一级防水"]
+  },
+  {
+    "category": "insulation",
+    "displayName": "保温材料",
+    "keywords": ["保温", "岩棉", "挤塑板", "XPS", "EPS", "玻璃棉"],
+    "requiredDocuments": ["材料报审单", "出厂合格证", "检测报告", "燃烧性能报告"],
+    "recommendedStandards": ["GB 8624", "GB/T 10801", "GB 55037"],
+    "requiredParameterKeywords": ["燃烧性能", "导热系数", "密度", "压缩强度"],
+    "minReferencePrice": 40,
+    "maxReferencePrice": 180,
+    "priceUnit": "元/平方米",
+    "highRiskKeywords": ["外墙", "防火隔离带", "幕墙", "A级", "B1级"]
+  },
+  {
+    "category": "rebar",
+    "displayName": "钢筋",
+    "keywords": ["钢筋", "HRB", "HPB", "螺纹钢"],
+    "requiredDocuments": ["材料报审单", "出厂合格证", "质量证明书", "复试报告"],
+    "recommendedStandards": ["GB/T 1499.2", "GB 55008"],
+    "requiredParameterKeywords": ["屈服强度", "抗拉强度", "伸长率", "重量偏差"],
+    "minReferencePrice": 3200,
+    "maxReferencePrice": 5200,
+    "priceUnit": "元/吨",
+    "highRiskKeywords": ["主体结构", "基础", "梁", "柱", "抗震"]
+  },
+  {
+    "category": "concrete",
+    "displayName": "混凝土",
+    "keywords": ["混凝土", "C30", "C35", "C40", "商砼"],
+    "requiredDocuments": ["配合比通知单", "出厂合格证", "强度报告", "开盘鉴定"],
+    "recommendedStandards": ["GB 50164", "GB/T 14902", "GB 50204"],
+    "requiredParameterKeywords": ["强度等级", "坍落度", "抗渗等级", "氯离子"],
+    "minReferencePrice": 360,
+    "maxReferencePrice": 780,
+    "priceUnit": "元/立方米",
+    "highRiskKeywords": ["主体结构", "基础", "地下室", "抗渗", "大体积"]
+  },
+  {
+    "category": "cable",
+    "displayName": "电线电缆",
+    "keywords": ["电线", "电缆", "YJV", "BV", "阻燃", "耐火"],
+    "requiredDocuments": ["材料报审单", "出厂合格证", "检测报告", "CCC认证"],
+    "recommendedStandards": ["GB/T 12706", "GB/T 5023", "GB 31247"],
+    "requiredParameterKeywords": ["导体电阻", "绝缘厚度", "阻燃等级", "耐火性能"],
+    "minReferencePrice": 8,
+    "maxReferencePrice": 260,
+    "priceUnit": "元/米",
+    "highRiskKeywords": ["消防", "应急照明", "配电干线", "耐火"]
+  },
+  {
+    "category": "pipe",
+    "displayName": "管材",
+    "keywords": ["管材", "PPR", "PVC", "PE管", "镀锌钢管", "HDPE"],
+    "requiredDocuments": ["材料报审单", "出厂合格证", "检测报告", "卫生许可批件"],
+    "recommendedStandards": ["GB/T 13663", "GB/T 18742", "GB/T 5836"],
+    "requiredParameterKeywords": ["公称压力", "壁厚", "环刚度", "卫生性能"],
+    "minReferencePrice": 5,
+    "maxReferencePrice": 180,
+    "priceUnit": "元/米",
+    "highRiskKeywords": ["给水", "消防", "压力管", "埋地"]
+  }
+]

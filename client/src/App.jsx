@@ -76,6 +76,7 @@ const signalClasses = {
 function App() {
   const [request, setRequest] = useState(emptyRequest);
   const [rules, setRules] = useState([]);
+  const [history, setHistory] = useState([]);
   const [report, setReport] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -85,6 +86,10 @@ function App() {
       .then((res) => (res.ok ? res.json() : []))
       .then(setRules)
       .catch(() => setRules([]));
+  }, []);
+
+  useEffect(() => {
+    loadHistory();
   }, []);
 
   const selectedRule = useMemo(() => {
@@ -100,6 +105,33 @@ function App() {
 
   const setNumberField = (name, value) => {
     setField(name, value === '' ? '' : Number(value));
+  };
+
+  const loadHistory = async () => {
+    try {
+      const response = await fetch('/api/audits?limit=20');
+      if (!response.ok) return;
+      setHistory(await response.json());
+    } catch {
+      setHistory([]);
+    }
+  };
+
+  const openHistoryReport = async (reportId) => {
+    setLoading(true);
+    setError('');
+    try {
+      const response = await fetch(`/api/audits/${encodeURIComponent(reportId)}`);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      setReport(await response.json());
+    } catch (err) {
+      setError(`读取历史报告失败：${err.message}`);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const loadSample = async () => {
@@ -145,6 +177,7 @@ function App() {
 
       const data = await response.json();
       setReport(data);
+      await loadHistory();
     } catch (err) {
       setError(`审核失败：${err.message}`);
     } finally {
@@ -219,7 +252,9 @@ function App() {
           report={report}
           loading={loading}
           error={error}
+          history={history}
           onExport={exportReport}
+          onSelectHistory={openHistoryReport}
         />
       </main>
     </div>
@@ -311,7 +346,7 @@ function InputWorkspace({ request, selectedRule, onField, onNumberField }) {
   );
 }
 
-function ReportWorkspace({ report, loading, error, onExport }) {
+function ReportWorkspace({ report, loading, error, history, onExport, onSelectHistory }) {
   if (loading) {
     return (
       <div className="flex min-h-[620px] items-center justify-center rounded-md border border-slate-200 bg-white shadow-panel">
@@ -325,25 +360,31 @@ function ReportWorkspace({ report, loading, error, onExport }) {
 
   if (error) {
     return (
-      <div className="rounded-md border border-red-200 bg-red-50 p-5 text-red-800 shadow-panel">
-        <div className="flex items-center gap-2 text-sm font-semibold">
-          <CircleAlert size={18} aria-hidden="true" />
-          {error}
+      <div className="space-y-4">
+        <div className="rounded-md border border-red-200 bg-red-50 p-5 text-red-800 shadow-panel">
+          <div className="flex items-center gap-2 text-sm font-semibold">
+            <CircleAlert size={18} aria-hidden="true" />
+            {error}
+          </div>
         </div>
+        <HistoryPanel history={history} onSelect={onSelectHistory} />
       </div>
     );
   }
 
   if (!report) {
     return (
-      <div className="flex min-h-[620px] items-center justify-center rounded-md border border-dashed border-slate-300 bg-white p-8 text-center shadow-panel">
-        <div>
-          <ShieldAlert className="mx-auto text-slate-400" size={42} aria-hidden="true" />
-          <h2 className="mt-3 text-base font-semibold text-slate-800">等待审核</h2>
-          <p className="mt-2 max-w-md text-sm leading-6 text-slate-500">
-            填写左侧材料信息后开始审核，结果会显示风险等级、成本信号、整改建议和 Agent 执行链路。
-          </p>
+      <div className="space-y-4">
+        <div className="flex min-h-[430px] items-center justify-center rounded-md border border-dashed border-slate-300 bg-white p-8 text-center shadow-panel">
+          <div>
+            <ShieldAlert className="mx-auto text-slate-400" size={42} aria-hidden="true" />
+            <h2 className="mt-3 text-base font-semibold text-slate-800">等待审核</h2>
+            <p className="mt-2 max-w-md text-sm leading-6 text-slate-500">
+              填写左侧材料信息后开始审核，结果会显示风险等级、成本信号、整改建议和 Agent 执行链路。
+            </p>
+          </div>
         </div>
+        <HistoryPanel history={history} onSelect={onSelectHistory} />
       </div>
     );
   }
@@ -391,6 +432,7 @@ function ReportWorkspace({ report, loading, error, onExport }) {
       </div>
 
       <TracePanel trace={report.trace} />
+      <HistoryPanel history={history} onSelect={onSelectHistory} />
     </div>
   );
 }
@@ -634,6 +676,46 @@ function TracePanel({ trace }) {
   );
 }
 
+function HistoryPanel({ history, onSelect }) {
+  return (
+    <section className="rounded-md border border-slate-200 bg-white shadow-panel">
+      <PanelTitle icon={ClipboardList} title="历史审核" />
+      {history.length === 0 ? (
+        <div className="px-4 py-5 text-sm text-slate-500 sm:px-5">暂无历史记录</div>
+      ) : (
+        <div className="divide-y divide-slate-200">
+          {history.map((item) => (
+            <button
+              key={item.reportId}
+              type="button"
+              onClick={() => onSelect(item.reportId)}
+              className="block w-full px-4 py-3 text-left transition hover:bg-slate-50 sm:px-5"
+            >
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <p className="text-sm font-semibold text-slate-950">
+                    {item.materialName || item.category}
+                  </p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    {item.projectName || '未命名项目'} · {item.supplier || '未填供应商'}
+                  </p>
+                </div>
+                <RiskBadge riskLevel={item.riskLevel} />
+              </div>
+              <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500">
+                <span>{item.conclusion}</span>
+                <span>{item.riskScore}/100</span>
+                <span>{formatMoney(item.totalAmount)} 元</span>
+                <span>{formatDateTime(item.createdAt)}</span>
+              </div>
+            </button>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
 function PanelTitle({ icon: Icon, title }) {
   return (
     <div className="flex items-center gap-2 border-b border-slate-200 px-4 py-3 sm:px-5">
@@ -641,6 +723,16 @@ function PanelTitle({ icon: Icon, title }) {
       <h2 className="text-sm font-semibold text-slate-950">{title}</h2>
     </div>
   );
+}
+
+function formatDateTime(value) {
+  if (!value) return '';
+  return new Date(value).toLocaleString('zh-CN', {
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 }
 
 function formatMoney(value) {

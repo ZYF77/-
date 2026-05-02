@@ -104,3 +104,17 @@ public sealed record MaterialAuditReport
     public List<string> NextActions { get; init; } = [];
     public List<AgentStep> Trace { get; init; } = [];
 }
+
+public sealed record AuditHistoryItem
+{
+    public string ReportId { get; init; } = "";
+    public DateTimeOffset CreatedAt { get; init; }
+    public string ProjectName { get; init; } = "";
+    public string MaterialName { get; init; } = "";
+    public string Category { get; init; } = "";
+    public string Supplier { get; init; } = "";
+    public string Conclusion { get; init; } = "";
+    public string RiskLevel { get; init; } = "";
+    public int RiskScore { get; init; }
+    public decimal TotalAmount { get; init; }
+}

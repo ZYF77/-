@@ -5,4 +5,12 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>BuildingMaterialsAuditAgent</RootNamespace>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="9.0.8" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="rules\**\*.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
 </Project>

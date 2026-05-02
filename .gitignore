@@ -19,6 +19,12 @@ client/.vite/
 *.log
 logs/
 
+# Local application data
+App_Data/
+*.db
+*.db-shm
+*.db-wal
+
 # Local environment files
 .env
 .env.*
